@@ -1,7 +1,15 @@
 services:
   lamp:
     build: .
+    init: true
+
     ports:
-      - "80:80"
+      - "${WEB_PORT:-80}:80"
+
     volumes:
-      - ./www:/var/www/html
+      - "${APP_DIR:-./www}:/var/www/html"
+      - mysql-data:/var/lib/mysql
+      - "${DB_INIT_DIR:-./db/init}:/docker-entrypoint-initdb.d:ro"
+
+volumes:
+  mysql-data:
