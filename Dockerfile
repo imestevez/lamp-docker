@@ -14,6 +14,9 @@ RUN apt-get update \
         ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
+COPY docker/apache/000-default.conf \
+    /etc/apache2/sites-available/000-default.conf
+
 RUN a2enmod rewrite headers
 
 EXPOSE 80
