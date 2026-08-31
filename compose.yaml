@@ -2,6 +2,9 @@ services:
   lamp:
     # Apache, PHP and MySQL share a container so legacy applications can use
     # 127.0.0.1 as their database host.
+    # All Compose projects reuse this image. Build it once, then switch only
+    # the mounted application, initialization SQL, port and project name.
+    image: "${LAMP_IMAGE:-lamp-docker:latest}"
     build: .
     init: true
 

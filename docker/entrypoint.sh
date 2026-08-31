@@ -29,8 +29,8 @@ chown -R mysql:mysql /run/mysqld /var/lib/mysql
 FIRST_RUN=0
 # These markers distinguish a completed setup from a partially executed SQL
 # initialization. An interrupted setup must be reset instead of silently skipped.
-INIT_STARTED=/var/lib/mysql/.tswlamp-init-started
-INIT_COMPLETE=/var/lib/mysql/.tswlamp-init-complete
+INIT_STARTED=/var/lib/mysql/.lamp-docker-init-started
+INIT_COMPLETE=/var/lib/mysql/.lamp-docker-init-complete
 
 if [ ! -d /var/lib/mysql/mysql ]; then
     echo "Initializing MySQL database..."
