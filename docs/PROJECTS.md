@@ -1,58 +1,82 @@
 # Adding and deploying projects
 
-This guide explains how to keep several applications in one LAMP-DOCKER clone.
-The normal first-contact workflow uses only the base `.env` deployment named
-`lamp`. Additional `.env.<project>` files are an optional advanced mechanism
-for running several isolated deployments without rebuilding the image.
+LAMP-DOCKER supports two ways of organizing course projects.
 
-## Directory layout
-
-Clone LAMP-DOCKER only once. Store each application and its initialization SQL
-inside that clone:
+You do not need to understand both workflows before starting. Use this rule
+unless the exercise instructions say otherwise:
 
 ```text
-lamp-docker/
-├── .env
-├── .env.myproject1 # Optional: additional deployment
-├── .env.myproject2 # Optional: additional deployment
-├── db/
-│   ├── init/
-│   ├── myproject1/
-│   │   └── 01-init.sql
-│   └── myproject2/
-│       └── 01-init.sql
-└── www/
-    ├── myproject1/
-    │   └── index.php
-    └── myproject2/
-        └── index.php
+Small exercise without database isolation
+                |
+                v
+     Shared base environment
+
+
+MVC / REST / own database / independent project
+                |
+                v
+     Isolated project deployment
 ```
 
-All commands in this guide must be run from `lamp-docker/`.
+## First choose a workflow
 
-## Build the shared image once
+| | Shared base environment | Isolated project deployment |
+| --- | --- | --- |
+| Best for | Introductory exercises and several small applications | Projects that need independent data or must run simultaneously |
+| PHP location | `www/<project>/` | `www/<project>/` |
+| URL | `http://localhost/<project>/` | `http://localhost:<port>/` |
+| Environment file | Existing `.env` | New `.env.<project>` |
+| Database volume | Shared by every application | Exclusive to the project |
+| SQL location | `db/init/` or manual import | `db/<project>/` |
+| Commands | `docker compose ...` | `docker compose --env-file .env.<project> ...` |
 
-The default environment uses the image name `lamp-docker:latest`. Build it once:
+Use the shared environment when database isolation is unnecessary. Use an
+isolated deployment when resetting or changing one project's database must not
+affect the others.
+
+All commands below must be run from the `lamp-docker/` directory. Local
+applications, project SQL and `.env.<project>` files are intentionally ignored
+by this repository. Put work that must be submitted or shared in its own
+repository.
+
+## One-time installation check
+
+Do this once after installing or cloning LAMP-DOCKER.
+
+### Linux
 
 ```bash
 cp .env.example .env
 docker compose up -d --build
+curl --fail http://localhost/dbtest.php
 ```
 
-After this first build, project deployments use the same image. Changes to
-`APP_DIR`, `DB_INIT_DIR`, `WEB_PORT` or `COMPOSE_PROJECT_NAME` only recreate the
-container configuration; they do not rebuild the image.
+### Windows PowerShell
 
-Rebuild only after changing `Dockerfile`, `docker/entrypoint.sh`, or the Apache
-or PHP configuration under `docker/`.
+```powershell
+Copy-Item .env.example .env
+docker compose up -d --build
+curl.exe --fail http://localhost/dbtest.php
+```
 
-## Default deployment with `.env`
+Expected response:
 
-When no alternative file is specified, Compose automatically loads `.env`.
-This is the recommended workflow for the initial setup and normal classroom
-exercises. No project-specific environment file is required.
+```text
+PHP -> MySQL OK
+```
 
-The default configuration is:
+This verifies Apache, PHP and MySQL and builds the shared
+`lamp-docker:latest` image.
+
+Rebuild only after changing the `Dockerfile` or files under `docker/`; PHP,
+HTML, CSS, JavaScript and SQL changes do not require rebuilding the image.
+
+---
+
+## Option A: use the shared base environment
+
+This option keeps one container and one MySQL volume for all applications. It
+uses the existing `.env`:
 
 ```ini
 COMPOSE_PROJECT_NAME=lamp
@@ -62,47 +86,154 @@ APP_DIR=./www
 DB_INIT_DIR=./db/init
 ```
 
-Start and manage it normally:
+### Add an application without its own database
+
+Create the application under `www/`:
+
+```text
+www/myproject1/
+└── index.php
+```
+
+It is available at:
+
+```text
+http://localhost/myproject1/
+```
+
+Start or reuse the base environment:
 
 ```bash
 docker compose up -d
+```
+
+Because `www/` is mounted from the host, application changes are visible
+immediately.
+
+### Add a database to the shared environment
+
+The key point is:
+
+> `db/init/` is automatic only when the shared MySQL volume is created for the
+> first time.
+
+There are therefore two cases.
+
+**Before the first start:** place the SQL file in `db/init/`. Every `*.sql`
+file there is executed once, in alphabetical order.
+
+**After the environment has already been started:** import the SQL manually.
+Adding a new file to `db/init/` alone will not execute it.
+
+If you completed the one-time installation check above, the shared volume
+already exists, so manual import is normally the case.
+
+Create, for example:
+
+```text
+db/myproject1/
+└── 01-init.sql
+```
+
+Then import it.
+
+Linux:
+
+```bash
+docker compose exec -T lamp mysql -uroot < db/myproject1/01-init.sql
+```
+
+Windows PowerShell:
+
+```powershell
+Get-Content .\db\myproject1\01-init.sql -Raw |
+    docker compose exec -T lamp mysql -uroot
+```
+
+This adds the new database to the existing shared MySQL volume without deleting
+the databases of other exercises.
+
+The PHP application connects to:
+
+```text
+host: 127.0.0.1
+port: 3306
+```
+
+using the database name, user and password created by its SQL.
+
+Useful commands for the shared environment:
+
+```bash
 docker compose ps
 docker compose logs lamp
 docker compose down
 ```
 
-Because the base deployment mounts all of `./www`, applications stored there
-are available as URL paths without any extra configuration. For example:
+`docker compose down` preserves the shared database volume.
+
+> Avoid `docker compose down -v` in the shared environment unless you really
+> want to delete **all databases stored in that shared volume**.
+
+---
+
+## Option B: create an isolated project deployment
+
+Use this option when the project should have its own container, port and MySQL
+volume while reusing `lamp-docker:latest`.
+
+The project uses three related paths:
+
+| Component | Example |
+| --- | --- |
+| PHP application | `www/myproject1/` |
+| Initialization SQL | `db/myproject1/` |
+| Deployment configuration | `.env.myproject1` |
+
+They are connected by the environment file:
 
 ```text
-www/myproject1/index.php  ->  http://localhost/myproject1/
-www/myproject2/index.php  ->  http://localhost/myproject2/
+.env.myproject1
+      |
+      +-- APP_DIR --------> ./www/myproject1/
+      |
+      +-- DB_INIT_DIR ----> ./db/myproject1/
+      |
+      +-- WEB_PORT -------> http://localhost:8081/
+      |
+      +-- COMPOSE_PROJECT_NAME
+                           -> independent Compose resources
 ```
 
-This single `lamp` deployment is sufficient for the introductory workflow.
+### 1. Create the PHP and SQL files
 
-The Compose project name is `lamp`. Compose uses it to generate names for the
-container, network and MySQL volume. With Compose v2, the container name is
-normally similar to `lamp-lamp-1`.
+```text
+www/myproject1/
+└── index.php
 
-Do not add `container_name` to `compose.yaml`: the Compose project name already
-provides isolation and avoids naming collisions.
+db/myproject1/
+└── 01-init.sql
+```
 
-## Optional: run independent project deployments
+An initialization file can create the database and application user:
 
-Use this alternative only when several applications must have independent
-containers and databases, or must run at the same time. Each deployment needs:
+```sql
+CREATE DATABASE myproject1
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
 
-- a unique `COMPOSE_PROJECT_NAME`, to isolate its container, network and volume;
-- a unique `WEB_PORT` if it will run simultaneously with another deployment;
-- the corresponding application and SQL directories.
+CREATE USER 'myproject1'@'localhost'
+IDENTIFIED BY 'change-this-password';
 
-The base `.env` deployment remains available as `lamp` and does not need to be
-replaced.
+GRANT ALL PRIVILEGES
+ON myproject1.*
+TO 'myproject1'@'localhost';
+```
 
-### Create an optional project environment file
+The PHP application uses the same database name, user and password and connects
+to host `127.0.0.1` on port `3306`.
 
-For example, create `.env.myproject1`:
+### 2. Create `.env.myproject1`
 
 ```ini
 COMPOSE_PROJECT_NAME=myproject1
@@ -112,139 +243,86 @@ APP_DIR=./www/myproject1
 DB_INIT_DIR=./db/myproject1
 ```
 
-The values have these effects:
+Each simultaneous deployment needs a unique `COMPOSE_PROJECT_NAME` and
+`WEB_PORT`.
 
-| Variable | Effect |
-| --- | --- |
-| `COMPOSE_PROJECT_NAME` | Gives this deployment its own container, network and MySQL volume |
-| `LAMP_IMAGE` | Reuses the previously built LAMP image |
-| `WEB_PORT` | Avoids a port conflict with other running projects |
-| `APP_DIR` | Mounts this application as Apache's document root |
-| `DB_INIT_DIR` | Selects its first-run SQL files |
-
-The file is mounted as the document root, so:
-
-```text
-www/myproject1/index.php
-```
-
-is available at:
+`APP_DIR` selects the Apache document root. Therefore this application is served
+directly at:
 
 ```text
 http://localhost:8081/
 ```
 
-### Deploy using an environment file
+not at:
 
-Inspect the resolved configuration before starting:
+```text
+http://localhost:8081/myproject1/
+```
+
+`DB_INIT_DIR` selects the SQL that is executed when this project's MySQL volume
+is created for the first time.
+
+### 3. Check the configuration before starting
 
 ```bash
 docker compose --env-file .env.myproject1 config
 ```
 
-Start the project without rebuilding:
+Check that:
+
+- `APP_DIR` resolves to `www/myproject1`;
+- `DB_INIT_DIR` resolves to `db/myproject1`;
+- the expected host port is used;
+- the expected Compose project name is used.
+
+This check is especially important before any command that includes `-v`.
+
+### 4. Start and verify
 
 ```bash
 docker compose --env-file .env.myproject1 up -d
+docker compose --env-file .env.myproject1 ps
+docker compose --env-file .env.myproject1 logs lamp
 ```
 
-Use the same environment file for every later operation so that Compose
-selects the correct project and volume:
+On the first start, the logs should contain:
+
+```text
+Running /docker-entrypoint-initdb.d/01-init.sql
+```
+
+Open:
+
+```text
+http://localhost:8081/
+```
+
+If needed, verify the database directly:
 
 ```bash
+docker compose --env-file .env.myproject1 exec lamp \
+    mysql -h 127.0.0.1 -umyproject1 -p myproject1
+```
+
+### 5. Manage the project later
+
+Always use the same environment file:
+
+```bash
+docker compose --env-file .env.myproject1 up -d
 docker compose --env-file .env.myproject1 ps
 docker compose --env-file .env.myproject1 logs lamp
 docker compose --env-file .env.myproject1 exec lamp bash
 docker compose --env-file .env.myproject1 down
 ```
 
-Do not add `--build` when only deploying or switching applications.
+Prefer `docker compose ... exec` over relying on a generated container name.
+Compose resolves the correct container automatically.
 
-### Override the configuration from the console
+`down` preserves this project's database.
 
-For an occasional deployment, variables can be provided by the shell instead
-of creating a file. 
-
-> **Note:** the variables specified in the console take precedence over those defined in `.env`. Compose continues to read `.env`, but in this case, it replaces the variables with the values from the console.
-
-### Linux
-
-```bash
-COMPOSE_PROJECT_NAME=myproject1 \
-LAMP_IMAGE=lamp-docker:latest \
-WEB_PORT=8081 \
-APP_DIR=./www/myproject1 \
-DB_INIT_DIR=./db/myproject1 \
-docker compose up -d
-```
-
-This form applies the variables to that command only. Later commands must at
-least identify the same Compose project:
-
-```bash
-docker compose -p myproject1 ps
-docker compose -p myproject1 logs lamp
-docker compose -p myproject1 down
-```
-
-Using an `.env.myproject1` file is less error-prone for regular classroom use.
-
-### Windows PowerShell
-
-```powershell
-$env:COMPOSE_PROJECT_NAME = "myproject1"
-$env:LAMP_IMAGE = "lamp-docker:latest"
-$env:WEB_PORT = "8081"
-$env:APP_DIR = "./www/myproject1"
-$env:DB_INIT_DIR = "./db/myproject1"
-docker compose up -d
-```
-
-These variables remain in the current PowerShell session. They can be removed
-afterwards with:
-
-```powershell
-Remove-Item Env:COMPOSE_PROJECT_NAME
-Remove-Item Env:LAMP_IMAGE
-Remove-Item Env:WEB_PORT
-Remove-Item Env:APP_DIR
-Remove-Item Env:DB_INIT_DIR
-```
-
-### Run several applications simultaneously
-
-Give every environment file a unique `COMPOSE_PROJECT_NAME` and `WEB_PORT`:
-
-| File | Project name | Port | Application |
-| --- | --- | --- | --- |
-| `.env` | `lamp` | `80` | `./www` |
-| `.env.myproject1` | `myproject1` | `8081` | `./www/myproject1` |
-| `.env.myproject2` | `myproject2` | `8082` | `./www/myproject2` |
-| `.env.myproject3` | `myproject3` | `8083` | `./www/myproject3` |
-
-Start each one with its file:
-
-```bash
-docker compose --env-file .env.myproject1 up -d
-docker compose --env-file .env.myproject2 up -d
-docker compose --env-file .env.myproject3 up -d
-```
-
-They share `lamp-docker:latest`, but each has an independent container, network
-and MySQL volume. Resetting one project's volume does not affect the others.
-
-## Database initialization
-
-For example, place the first-run SQL for `myproject1` in:
-
-```text
-db/myproject1/01-init.sql
-```
-
-Initialization runs only when that Compose project's MySQL volume is created.
-Changing `DB_INIT_DIR` does not modify an existing volume.
-
-To reset only `myproject1`, after confirming that its data may be discarded:
+If the initialization SQL is changed during development and the existing data
+may be discarded, recreate only this project's volume:
 
 ```bash
 docker compose --env-file .env.myproject1 config
@@ -252,21 +330,41 @@ docker compose --env-file .env.myproject1 down -v
 docker compose --env-file .env.myproject1 up -d
 ```
 
-> **Warning:** `down -v` permanently deletes the databases belonging to the
-> selected Compose project.
+> **Warning:** `down -v` permanently deletes the selected project's database.
 
-See [Database initialization and management](DATABASE.md) for SQL and database
-access details.
+---
 
-## Optional multi-deployment checklist
+## Run several isolated projects simultaneously
 
-This checklist is needed only for the optional multiple-deployment workflow:
+Give each environment file a different project name and host port:
 
-1. Put the application in `www/<project>/`.
-2. Put first-run SQL in `db/<project>/`.
-3. Create `.env.<project>` with a unique project name and host port.
-4. Keep `LAMP_IMAGE=lamp-docker:latest` to reuse the shared image.
-5. Run `docker compose --env-file .env.<project> config`.
-6. Confirm `APP_DIR`, `DB_INIT_DIR`, `WEB_PORT` and the project name.
-7. Run `docker compose --env-file .env.<project> up -d` without `--build`.
-8. Check `ps`, logs, the database connection and the application URL.
+| File | Project name | Port | Application | SQL |
+| --- | --- | --- | --- | --- |
+| `.env.myproject1` | `myproject1` | `8081` | `./www/myproject1` | `./db/myproject1` |
+| `.env.myproject2` | `myproject2` | `8082` | `./www/myproject2` | `./db/myproject2` |
+
+Start both:
+
+```bash
+docker compose --env-file .env.myproject1 up -d
+docker compose --env-file .env.myproject2 up -d
+```
+
+They share the image but have independent containers, networks and database
+volumes.
+
+---
+
+## Quick decision checklist
+
+- Small exercise, no database isolation needed: use **Option A**.
+- Several small applications may share one MySQL volume: use **Option A**.
+- Existing shared volume needs another database: import its SQL manually.
+- MVC/REST project with its own database: normally use **Option B**.
+- Project needs its own disposable database: use **Option B**.
+- Projects must run simultaneously on different ports: use **Option B**.
+- Changing an initialization file after first start: import the change manually
+  or recreate only the appropriate volume if its data may be deleted.
+
+See [Database initialization and management](DATABASE.md#database-initialization-and-management)
+for detailed database commands.

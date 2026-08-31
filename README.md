@@ -26,7 +26,7 @@ The exact Apache and MySQL package versions depend on the Ubuntu 24.04 repositor
 - Docker Compose v2
 - Docker Buildx (required when Compose builds the image with Bake)
 
-Compose v2 is the supported version and uses the `docker compose`.
+Compose v2 is the supported version and uses the `docker compose` command.
 
 ### Linux
 
@@ -50,19 +50,24 @@ docker buildx version
 
 If `docker compose` is unavailable, install the Compose plugin by following the
 [official Docker Compose installation guide](https://docs.docker.com/compose/install/).
+
 If `docker buildx` is unavailable, see
 [Buildx is not installed](docs/TROUBLESHOOTING.md#buildx-is-not-installed).
 
 ## Quick start
 
-The following steps start the default test application and verify both the web server and the PHP-to-MySQL connection.
+These steps start the included test application and verify the complete path:
+
+```text
+browser or curl -> Apache -> PHP -> MySQL
+```
 
 ### Linux
 
 Clone the repository and enter its root directory:
 
 ```bash
-git clone <REPOSITORY-URL> lamp-docker
+git clone https://github.com/imestevez/lamp-docker.git lamp-docker
 cd lamp-docker
 ```
 
@@ -72,7 +77,7 @@ Create the local configuration:
 cp .env.example .env
 ```
 
-Verify that Docker Compose is reading the expected configuration:
+Verify the resolved Compose configuration:
 
 ```bash
 docker compose config
@@ -84,8 +89,8 @@ Build and start the environment:
 docker compose up -d --build
 ```
 
-The first command builds the shared `lamp-docker:latest` image. Project-specific
-deployments reuse it and do not need `--build`.
+This command builds the shared `lamp-docker:latest` image. Project-specific
+deployments reuse it and normally do not need `--build`.
 
 Check its status:
 
@@ -105,25 +110,27 @@ Then test the PHP-to-MySQL connection:
 curl --fail http://localhost/dbtest.php
 ```
 
-The expected result is:
+Expected result:
 
 ```text
 PHP -> MySQL OK
 ```
 
-You can also open the following URLs in a browser:
+You can also open:
 
 ```text
 http://localhost/
 http://localhost/dbtest.php
 ```
 
+in a browser.
+
 ### Windows PowerShell
 
 Clone the repository and enter its root directory:
 
 ```powershell
-git clone <REPOSITORY-URL> lamp-docker
+git clone https://github.com/imestevez/lamp-docker.git lamp-docker
 Set-Location lamp-docker
 ```
 
@@ -133,7 +140,7 @@ Create the local configuration:
 Copy-Item .env.example .env
 ```
 
-Verify that Docker Compose is reading the expected configuration:
+Verify the resolved Compose configuration:
 
 ```powershell
 docker compose config
@@ -163,22 +170,24 @@ Then test the PHP-to-MySQL connection:
 curl.exe --fail http://localhost/dbtest.php
 ```
 
-The expected result is:
+Expected result:
 
 ```text
 PHP -> MySQL OK
 ```
 
-You can also open the following URLs in a browser:
+You can also open:
 
 ```text
 http://localhost/
 http://localhost/dbtest.php
 ```
 
+in a browser.
+
 ## Important: run Docker Compose from the project root
 
-The `.env` file must be located next to `compose.yaml`:
+Keep `.env` next to `compose.yaml`:
 
 ```text
 lamp-docker/
@@ -191,18 +200,14 @@ lamp-docker/
 └── www/                # Local applications are ignored by Git
 ```
 
-Run `docker compose` from this directory.
+Run `docker compose` from this directory so that Compose finds `compose.yaml`
+and loads the expected `.env` file.
 
-Running from the project root ensures that Compose finds `compose.yaml` and
-loads the expected `.env` file.
-
-Use:
+Whenever `.env` changes, check the resolved configuration before restarting:
 
 ```bash
 docker compose config
 ```
-
-before starting the environment whenever you change `.env`.
 
 ## Default configuration
 
@@ -227,28 +232,46 @@ password:  tswpass
 
 MySQL port `3306` is not exposed to the host.
 
-## Stop the environment
+## Add a course project
 
-Preserve the MySQL data:
+After the Quick Start, continue with
+[Adding and deploying projects](docs/PROJECTS.md#adding-and-deploying-projects).
 
-```bash
-docker compose down
-```
+As a simple course rule:
 
-To start it again:
+| Project | Recommended workflow |
+| --- | --- |
+| Introductory or small exercise that does not need database isolation | **Shared base environment** |
+| MVC, REST, database-backed project, or project that must run independently | **Isolated project deployment** |
+
+The project guide explains both workflows step by step, including what happens
+when a database volume already exists.
+
+## Daily commands
+
+For the shared base environment:
 
 ```bash
 docker compose up -d
+docker compose ps
+docker compose logs --tail=100 lamp
+docker compose down
 ```
 
-Do **not** use `docker compose down -v` unless you intentionally want to delete the database volume.
+`docker compose down` preserves MySQL data.
+
+For isolated projects, use the corresponding `.env.<project>` file as explained
+in [PROJECTS.md](docs/PROJECTS.md#option-b-create-an-isolated-project-deployment).
+
+> Do not add `-v` to `down` unless you intentionally want to delete the selected
+> deployment's MySQL volume.
 
 ## Further documentation
 
-- [Adding and configuring projects](docs/PROJECTS.md)
-- [Database initialization and management](docs/DATABASE.md)
-- [Logs, verification and troubleshooting](docs/TROUBLESHOOTING.md)
-- [Removing containers and images](docs/CLEANUP.md)
+- [Adding and configuring projects](docs/PROJECTS.md#adding-and-deploying-projects)
+- [Database initialization and management](docs/DATABASE.md#database-initialization-and-management)
+- [Logs, verification and troubleshooting](docs/TROUBLESHOOTING.md#logs-verification-and-troubleshooting)
+- [Removing containers and images](docs/CLEANUP.md#removing-containers-and-images)
 
 ## License and attribution
 

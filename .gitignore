@@ -4,8 +4,6 @@
 
 # Ignore local database projects, but keep the test initialization file.
 /db/*
-!/db/init/
-/db/init/*
 !/db/init/01-test.sql
 
 # Utility scripts are local and are not distributed with the repository.

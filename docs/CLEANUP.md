@@ -1,9 +1,13 @@
 # Removing containers and images
 
-This guide distinguishes between removing one LAMP-DOCKER deployment and
+This guide distinguishes between cleaning one LAMP-DOCKER deployment and
 removing Docker resources from the entire computer.
 
-## Inspect Docker resources first
+Official Docker documentation: https://docs.docker.com/
+
+## Normal LAMP-DOCKER cleanup
+
+### Inspect the current resources
 
 ```bash
 # Running containers
@@ -19,23 +23,11 @@ docker images
 docker system df
 ```
 
-## Stop or remove one container manually
+### Remove the base `lamp` deployment
 
-Find its name or ID and then use the short commands:
+Run this from the LAMP-DOCKER root.
 
-```bash
-docker ps -a
-docker stop <container-name-or-id>
-docker rm <container-name-or-id>
-```
-
-Normally, prefer `docker compose down` for LAMP-DOCKER deployments because it
-also removes the corresponding Compose network cleanly.
-
-## Remove the base `lamp` deployment
-
-Run this from the LAMP-DOCKER root. It removes the container and network but
-preserves the MySQL volume:
+Remove the container and network but preserve its MySQL volume:
 
 ```bash
 docker compose down
@@ -50,7 +42,7 @@ docker compose down -v
 > **Warning:** `-v` permanently deletes every database stored by this
 > deployment.
 
-## Remove one optional project deployment
+### Remove one isolated project deployment
 
 Use the same environment file that was used to start it:
 
@@ -64,15 +56,17 @@ To also delete only that project's MySQL volume:
 docker compose --env-file .env.myproject1 down -v
 ```
 
-Alternatively, identify the Compose project explicitly:
+Alternatively, if only the Compose project name is known:
 
 ```bash
 docker compose -p myproject1 down
 ```
 
-## Remove the LAMP-DOCKER image
+### Remove the LAMP-DOCKER image
 
-First stop every deployment that uses the shared image. Then remove it:
+First stop every deployment that uses the shared image.
+
+Then remove it:
 
 ```bash
 docker rmi lamp-docker:latest
@@ -91,16 +85,42 @@ The image can be created again with:
 docker compose up -d --build
 ```
 
-## Remove all stopped containers on the computer
+---
 
-The recommended global cleanup removes stopped containers only and asks for
-confirmation:
+## For normal LAMP-DOCKER use, stop here
+
+The remaining commands affect Docker resources outside the current deployment
+and may affect unrelated projects.
+
+Use them only when you understand their scope.
+
+---
+
+## Manual container removal
+
+Normally prefer `docker compose down`, because it also removes the corresponding
+Compose network cleanly.
+
+If manual removal is necessary, find the container first:
+
+```bash
+docker ps -a
+```
+
+Then:
+
+```bash
+docker stop <container-name-or-id>
+docker rm <container-name-or-id>
+```
+
+## Remove all stopped containers on the computer
 
 ```bash
 docker container prune
 ```
 
-Running containers are not affected.
+This asks for confirmation. Running containers are not affected.
 
 ## Remove all containers on the computer
 
@@ -130,14 +150,12 @@ docker ps -aq | ForEach-Object { docker rm -f $_ }
 
 ## Remove all unused images on the computer
 
-This removes every image that is not referenced by a container and asks for
-confirmation:
-
 ```bash
 docker image prune -a
 ```
 
-Images used by existing containers are preserved.
+This asks for confirmation and removes images that are not referenced by a
+container.
 
 ## Remove every image on the computer
 
@@ -161,8 +179,10 @@ docker images -aq | ForEach-Object { docker rmi -f $_ }
 ## General Docker cleanup
 
 Docker also provides `docker system prune` for removing stopped containers,
-unused networks, dangling images and build cache. Adding `-a` removes all
-unused images as well. Volumes are not removed unless `--volumes` is supplied.
+unused networks, dangling images and build cache.
+
+Adding `-a` removes all unused images as well. Volumes are not removed unless
+`--volumes` is supplied.
 
 Read the confirmation carefully before continuing:
 
@@ -170,4 +190,20 @@ Read the confirmation carefully before continuing:
 docker system prune
 ```
 
-Official Docker documentation: https://docs.docker.com/
+## Recommended rule
+
+Use the least destructive command that solves the problem:
+
+```text
+stop one LAMP-DOCKER deployment
+        -> docker compose ... down
+
+recreate one deployment's database
+        -> docker compose ... down -v
+
+remove globally unused Docker resources
+        -> prune commands
+
+remove everything from Docker on the computer
+        -> global remove commands (rarely needed)
+```
