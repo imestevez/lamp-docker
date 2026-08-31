@@ -1,1 +1,15 @@
-.env
+# Ignores environment files
+*.env*
+!.env.example
+
+# Ignores db contents, keep basic php files for testing
+db/
+!db/init/01-test.sql
+
+# Ignores extra utilss
+utils/extra
+
+# Ignores www contents, keep basic php files for testing
+www/
+!www/index.php
+!www/dbtest.php
