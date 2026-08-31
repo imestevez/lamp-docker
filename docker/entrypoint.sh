@@ -41,7 +41,7 @@ if [ ! -d /var/lib/mysql/mysql ]; then
     FIRST_RUN=1
 elif [ -e "$INIT_STARTED" ] && [ ! -e "$INIT_COMPLETE" ]; then
     echo "MySQL initialization was interrupted." >&2
-    echo "Reset it with: docker-compose down -v" >&2
+    echo "Reset it with: docker compose down -v" >&2
     exit 1
 fi
 

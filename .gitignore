@@ -1,15 +1,17 @@
-# Ignores environment files
+# Ignore local environment files, but keep the documented template.
 *.env*
 !.env.example
 
-# Ignores db contents, keep basic php files for testing
-db/
-!db/init/01-test.sql
+# Ignore local database projects, but keep the test initialization file.
+/db/*
+!/db/init/
+/db/init/*
+!/db/init/01-test.sql
 
-# Ignores extra utilss
-utils/extra
+# Utility scripts are local and are not distributed with the repository.
+/utils/
 
-# Ignores www contents, keep basic php files for testing
-www/
-!www/index.php
-!www/dbtest.php
+# Ignore local applications, but keep the smoke-test files.
+/www/*
+!/www/index.php
+!/www/dbtest.php
