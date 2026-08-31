@@ -47,7 +47,7 @@ Do this once after installing or cloning LAMP-DOCKER.
 
 ```bash
 cp .env.example .env
-docker compose up -d --build
+docker compose up -d
 curl --fail http://localhost/dbtest.php
 ```
 
@@ -55,7 +55,7 @@ curl --fail http://localhost/dbtest.php
 
 ```powershell
 Copy-Item .env.example .env
-docker compose up -d --build
+docker compose up -d
 curl.exe --fail http://localhost/dbtest.php
 ```
 
@@ -65,11 +65,11 @@ Expected response:
 PHP -> MySQL OK
 ```
 
-This verifies Apache, PHP and MySQL and builds the shared
-`lamp-docker:latest` image.
+This verifies Apache, PHP and MySQL using the published
+`imartinezestevez/lamp:latest` image.
 
-Rebuild only after changing the `Dockerfile` or files under `docker/`; PHP,
-HTML, CSS, JavaScript and SQL changes do not require rebuilding the image.
+Only maintainers changing the `Dockerfile` or files under `docker/` need to
+rebuild locally. PHP, HTML, CSS, JavaScript and SQL changes never require it.
 
 ---
 
@@ -80,7 +80,7 @@ uses the existing `.env`:
 
 ```ini
 COMPOSE_PROJECT_NAME=lamp
-LAMP_IMAGE=lamp-docker:latest
+LAMP_IMAGE=imartinezestevez/lamp:latest
 WEB_PORT=80
 APP_DIR=./www
 DB_INIT_DIR=./db/init
@@ -180,7 +180,7 @@ docker compose down
 ## Option B: create an isolated project deployment
 
 Use this option when the project should have its own container, port and MySQL
-volume while reusing `lamp-docker:latest`.
+volume while reusing `imartinezestevez/lamp:latest`.
 
 The project uses three related paths:
 
@@ -237,7 +237,7 @@ to host `127.0.0.1` on port `3306`.
 
 ```ini
 COMPOSE_PROJECT_NAME=myproject1
-LAMP_IMAGE=lamp-docker:latest
+LAMP_IMAGE=imartinezestevez/lamp:latest
 WEB_PORT=8081
 APP_DIR=./www/myproject1
 DB_INIT_DIR=./db/myproject1

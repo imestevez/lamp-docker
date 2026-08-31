@@ -547,7 +547,7 @@ Do not replace `exec` with `run` when targeting an existing project.
 A temporary shell for inspecting only the image can be created with:
 
 ```bash
-docker run --rm -it --entrypoint bash lamp-docker:latest
+docker run --rm -it --entrypoint bash imartinezestevez/lamp:latest
 ```
 
 It has none of the selected project's mounts or database volume.

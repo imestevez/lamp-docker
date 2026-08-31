@@ -69,20 +69,20 @@ First stop every deployment that uses the shared image.
 Then remove it:
 
 ```bash
-docker rmi lamp-docker:latest
+docker rmi imartinezestevez/lamp:latest
 ```
 
 If Docker reports that the image is in use, inspect the associated containers
 instead of immediately forcing its removal:
 
 ```bash
-docker ps -a --filter ancestor=lamp-docker:latest
+docker ps -a --filter ancestor=imartinezestevez/lamp:latest
 ```
 
-The image can be created again with:
+The published image can be downloaded again with:
 
 ```bash
-docker compose up -d --build
+docker compose pull lamp
 ```
 
 ---

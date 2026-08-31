@@ -24,7 +24,8 @@ The exact Apache and MySQL package versions depend on the Ubuntu 24.04 repositor
 
 - Docker
 - Docker Compose v2
-- Docker Buildx (required when Compose builds the image with Bake)
+
+Docker Buildx is optional and is needed only to rebuild the image locally.
 
 Compose v2 is the supported version and uses the `docker compose` command.
 
@@ -33,7 +34,6 @@ Compose v2 is the supported version and uses the `docker compose` command.
 ```bash
 docker --version
 docker compose version
-docker buildx version
 ```
 
 If your user cannot access Docker directly, prepend `sudo` to the Docker commands shown below.
@@ -45,14 +45,10 @@ Docker Desktop must be installed and running.
 ```powershell
 docker --version
 docker compose version
-docker buildx version
 ```
 
 If `docker compose` is unavailable, install the Compose plugin by following the
 [official Docker Compose installation guide](https://docs.docker.com/compose/install/).
-
-If `docker buildx` is unavailable, see
-[Buildx is not installed](docs/TROUBLESHOOTING.md#buildx-is-not-installed).
 
 ## Quick start
 
@@ -83,14 +79,15 @@ Verify the resolved Compose configuration:
 docker compose config
 ```
 
-Build and start the environment:
+Download, if necessary, and start the environment:
 
 ```bash
-docker compose up -d --build
+docker compose up -d
 ```
 
-This command builds the shared `lamp-docker:latest` image. Project-specific
-deployments reuse it and normally do not need `--build`.
+Compose uses the published
+[`imartinezestevez/lamp`](https://hub.docker.com/repository/docker/imartinezestevez/lamp)
+image. Project-specific deployments reuse the same image.
 
 Check its status:
 
@@ -146,10 +143,10 @@ Verify the resolved Compose configuration:
 docker compose config
 ```
 
-Build and start the environment:
+Download, if necessary, and start the environment:
 
 ```powershell
-docker compose up -d --build
+docker compose up -d
 ```
 
 Check its status:
@@ -215,7 +212,7 @@ The default `.env` configuration is:
 
 ```ini
 COMPOSE_PROJECT_NAME=lamp
-LAMP_IMAGE=lamp-docker:latest
+LAMP_IMAGE=imartinezestevez/lamp:latest
 WEB_PORT=80
 APP_DIR=./www
 DB_INIT_DIR=./db/init
