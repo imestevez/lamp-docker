@@ -1,5 +1,7 @@
 services:
   lamp:
+    # Apache, PHP and MySQL share a container so legacy applications can use
+    # 127.0.0.1 as their database host.
     build: .
     init: true
 
@@ -7,9 +9,20 @@ services:
       - "${WEB_PORT:-80}:80"
 
     volumes:
+      # Application sources remain editable on the host during development.
       - "${APP_DIR:-./www}:/var/www/html"
+      # Database files survive container recreation.
       - mysql-data:/var/lib/mysql
+      # SQL files are read only and run on the first volume initialization.
       - "${DB_INIT_DIR:-./db/init}:/docker-entrypoint-initdb.d:ro"
+
+    healthcheck:
+      # The service is healthy only when both MySQL and Apache respond.
+      test: ["CMD-SHELL", "mysqladmin ping --silent && curl --fail --silent http://127.0.0.1/ >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
 volumes:
   mysql-data:
