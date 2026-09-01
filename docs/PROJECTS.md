@@ -213,7 +213,7 @@ Create `.env.myproject1` with:
 ```ini
 COMPOSE_PROJECT_NAME=myproject1
 LAMP_IMAGE=imartinezestevez/lamp:latest
-WEB_PORT=8081
+WEB_PORT=8080
 APP_DIR=./www/myproject1
 DB_INIT_DIR=./db/myproject1
 ```
@@ -238,7 +238,7 @@ The environment file can point to that sibling repository:
 ```ini
 COMPOSE_PROJECT_NAME=myproject1
 LAMP_IMAGE=imartinezestevez/lamp:latest
-WEB_PORT=8081
+WEB_PORT=8080
 APP_DIR=../myproject1
 DB_INIT_DIR=../myproject1
 ```
@@ -284,13 +284,13 @@ Each simultaneous deployment needs a unique `COMPOSE_PROJECT_NAME` and
 directly at:
 
 ```text
-http://localhost:8081/
+http://localhost:8080/
 ```
 
 not at:
 
 ```text
-http://localhost:8081/myproject1/
+http://localhost:8080/myproject1/
 ```
 
 `DB_INIT_DIR` selects the SQL that is executed when this project's MySQL volume
@@ -328,7 +328,7 @@ Running /docker-entrypoint-initdb.d/01-init.sql
 Open:
 
 ```text
-http://localhost:8081/
+http://localhost:8080/
 ```
 
 If needed, verify the database directly:
@@ -374,8 +374,8 @@ Give each environment file a different project name and host port:
 
 | File | Project name | Port | Application | SQL |
 | --- | --- | --- | --- | --- |
-| `.env.myproject1` | `myproject1` | `8081` | `./www/myproject1` | `./db/myproject1` |
-| `.env.myproject2` | `myproject2` | `8082` | `./www/myproject2` | `./db/myproject2` |
+| `.env.myproject1` | `myproject1` | `8080` | `./www/myproject1` | `./db/myproject1` |
+| `.env.myproject2` | `myproject2` | `8081` | `./www/myproject2` | `./db/myproject2` |
 
 Start both:
 
