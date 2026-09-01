@@ -23,11 +23,11 @@ MVC / REST / own database / independent project
 | | Shared base environment | Isolated project deployment |
 | --- | --- | --- |
 | Best for | Introductory exercises and several small applications | Projects that need independent data or must run simultaneously |
-| PHP location | `www/<project>/` | `www/<project>/` |
+| PHP location | `www/<project>/` | Configurable with `APP_DIR` |
 | URL | `http://localhost/<project>/` | `http://localhost:<port>/` |
 | Environment file | Existing `.env` | New `.env.<project>` |
 | Database volume | Shared by every application | Exclusive to the project |
-| SQL location | `db/init/` or manual import | `db/<project>/` |
+| SQL location | `db/init/` or manual import | Configurable with `DB_INIT_DIR` |
 | Commands | `docker compose ...` | `docker compose --env-file .env.<project> ...` |
 
 Use the shared environment when database isolation is unnecessary. Use an
@@ -182,40 +182,84 @@ docker compose down
 Use this option when the project should have its own container, port and MySQL
 volume while reusing `imartinezestevez/lamp:latest`.
 
-The project uses three related paths:
+`www/` and `db/` are convenient defaults, not required locations. Compose uses
+the directories selected by `APP_DIR` and `DB_INIT_DIR`. These may point either
+inside `lamp-docker` or to another location available to Docker.
 
-| Component | Example |
-| --- | --- |
-| PHP application | `www/myproject1/` |
-| Initialization SQL | `db/myproject1/` |
-| Deployment configuration | `.env.myproject1` |
+Relative paths are resolved from the `lamp-docker` directory containing
+`compose.yaml`, not from the location of the environment file.
 
-They are connected by the environment file:
+Choose one of the following layouts.
 
-```text
-.env.myproject1
-      |
-      +-- APP_DIR --------> ./www/myproject1/
-      |
-      +-- DB_INIT_DIR ----> ./db/myproject1/
-      |
-      +-- WEB_PORT -------> http://localhost:8081/
-      |
-      +-- COMPOSE_PROJECT_NAME
-                           -> independent Compose resources
-```
+### Option B.1: keep the project inside `lamp-docker`
 
-### 1. Create the PHP and SQL files
+This layout is convenient for local exercises managed together with the LAMP
+environment:
 
 ```text
-www/myproject1/
-└── index.php
-
-db/myproject1/
-└── 01-init.sql
+lamp-docker/
+├── .env.myproject1
+├── compose.yaml
+├── www/
+│   └── myproject1/
+│       └── index.php
+└── db/
+    └── myproject1/
+        └── 01-init.sql
 ```
 
-An initialization file can create the database and application user:
+Create `.env.myproject1` with:
+
+```ini
+COMPOSE_PROJECT_NAME=myproject1
+LAMP_IMAGE=imartinezestevez/lamp:latest
+WEB_PORT=8081
+APP_DIR=./www/myproject1
+DB_INIT_DIR=./db/myproject1
+```
+
+### Option B.2: keep the project outside `lamp-docker`
+
+Use this layout when the application has its own repository. For example, the
+repositories may be siblings:
+
+```text
+workspace/
+├── lamp-docker/
+│   ├── .env.myproject1
+│   └── compose.yaml
+└── myproject1/
+    ├── database.sql
+    └── index.php
+```
+
+The environment file can point to that sibling repository:
+
+```ini
+COMPOSE_PROJECT_NAME=myproject1
+LAMP_IMAGE=imartinezestevez/lamp:latest
+WEB_PORT=8081
+APP_DIR=../myproject1
+DB_INIT_DIR=../myproject1
+```
+
+`DB_INIT_DIR` must identify a directory, not an individual SQL file. On the
+first volume initialization, LAMP-Docker executes every `*.sql` file located
+directly in that directory. If the application stores SQL in a dedicated
+subdirectory, point to it instead, for example:
+
+```ini
+APP_DIR=../myproject1
+DB_INIT_DIR=../myproject1/database/init
+```
+
+Absolute paths are also supported, but relative paths are usually more portable
+between development machines.
+
+### Common database configuration
+
+In either layout, an initialization file can create the database and application
+user:
 
 ```sql
 CREATE DATABASE myproject1
@@ -232,16 +276,6 @@ TO 'myproject1'@'localhost';
 
 The PHP application uses the same database name, user and password and connects
 to host `127.0.0.1` on port `3306`.
-
-### 2. Create `.env.myproject1`
-
-```ini
-COMPOSE_PROJECT_NAME=myproject1
-LAMP_IMAGE=imartinezestevez/lamp:latest
-WEB_PORT=8081
-APP_DIR=./www/myproject1
-DB_INIT_DIR=./db/myproject1
-```
 
 Each simultaneous deployment needs a unique `COMPOSE_PROJECT_NAME` and
 `WEB_PORT`.
@@ -262,7 +296,7 @@ http://localhost:8081/myproject1/
 `DB_INIT_DIR` selects the SQL that is executed when this project's MySQL volume
 is created for the first time.
 
-### 3. Check the configuration before starting
+### Check the configuration before starting
 
 ```bash
 docker compose --env-file .env.myproject1 config
@@ -270,14 +304,14 @@ docker compose --env-file .env.myproject1 config
 
 Check that:
 
-- `APP_DIR` resolves to `www/myproject1`;
-- `DB_INIT_DIR` resolves to `db/myproject1`;
+- `APP_DIR` resolves to the intended application directory;
+- `DB_INIT_DIR` resolves to the intended SQL directory;
 - the expected host port is used;
 - the expected Compose project name is used.
 
 This check is especially important before any command that includes `-v`.
 
-### 4. Start and verify
+### Start and verify
 
 ```bash
 docker compose --env-file .env.myproject1 up -d
@@ -304,7 +338,7 @@ docker compose --env-file .env.myproject1 exec lamp \
     mysql -h 127.0.0.1 -umyproject1 -p myproject1
 ```
 
-### 5. Manage the project later
+### Manage the project later
 
 Always use the same environment file:
 
