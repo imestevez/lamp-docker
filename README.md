@@ -79,11 +79,22 @@ Verify the resolved Compose configuration:
 docker compose config
 ```
 
-Download, if necessary, and start the environment:
+Start the environment and keep its logs in the terminal. Docker downloads the
+image automatically if necessary:
 
 ```bash
-docker compose up -d
+docker compose up
 ```
+
+Keep this terminal open to see the Apache, PHP and MySQL logs. Run the
+verification commands from a second terminal.
+
+> **Alternative:** To run in the background, add `-d`: `docker compose up -d`.
+> You can then run the verification commands in the same terminal.
+
+If you modify `Dockerfile` or files under `docker/`, rebuild the image
+explicitly with either form: `docker compose up --build` or
+`docker compose up -d --build`.
 
 Compose uses the published
 [`imartinezestevez/lamp`](https://hub.docker.com/repository/docker/imartinezestevez/lamp)
@@ -143,11 +154,22 @@ Verify the resolved Compose configuration:
 docker compose config
 ```
 
-Download, if necessary, and start the environment:
+Start the environment and keep its logs in the terminal. Docker downloads the
+image automatically if necessary:
 
 ```powershell
-docker compose up -d
+docker compose up
 ```
+
+Keep this terminal open to see the Apache, PHP and MySQL logs. Run the
+verification commands from a second terminal.
+
+> **Alternative:** To run in the background, add `-d`: `docker compose up -d`.
+> You can then run the verification commands in the same terminal.
+
+If you modify `Dockerfile` or files under `docker/`, rebuild the image
+explicitly with either form: `docker compose up --build` or
+`docker compose up -d --build`.
 
 Check its status:
 

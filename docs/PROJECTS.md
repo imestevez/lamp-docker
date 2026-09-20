@@ -47,7 +47,13 @@ Do this once after installing or cloning LAMP-DOCKER.
 
 ```bash
 cp .env.example .env
-docker compose up -d
+docker compose up
+```
+
+Keep this terminal open to see the logs. From a second terminal, verify the
+connection:
+
+```bash
 curl --fail http://localhost/dbtest.php
 ```
 
@@ -55,7 +61,13 @@ curl --fail http://localhost/dbtest.php
 
 ```powershell
 Copy-Item .env.example .env
-docker compose up -d
+docker compose up
+```
+
+Keep this terminal open to see the logs. From a second terminal, verify the
+connection:
+
+```powershell
 curl.exe --fail http://localhost/dbtest.php
 ```
 
