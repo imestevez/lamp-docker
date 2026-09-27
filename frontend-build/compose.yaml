@@ -1,0 +1,13 @@
+services:
+  builder:
+    image: node:22-bookworm
+    working_dir: /app
+    # Linux: use your user's IDs so generated files belong to you.
+    user: "${BUILD_UID:-1000}:${BUILD_GID:-1000}"
+    environment:
+      HOME: /tmp
+      npm_config_cache: /tmp/npm-cache
+    volumes:
+      - "${FRONTEND_SOURCE:?Set FRONTEND_SOURCE in .env}:/app"
+      - "./build.sh:/usr/local/bin/build-frontend.sh:ro"
+    command: ["sh", "/usr/local/bin/build-frontend.sh"]

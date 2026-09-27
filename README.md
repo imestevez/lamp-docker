@@ -289,12 +289,20 @@ in [PROJECTS.md](docs/PROJECTS.md#option-b-create-an-isolated-project-deployment
 > Do not add `-v` to `down` unless you intentionally want to delete the selected
 > deployment's MySQL volume.
 
+## Compile React, Vue or Angular
+
+Follow [Building and publishing frontends](docs/FRONTEND.md) to compile an
+existing npm application through Docker, without installing Node.js locally.
+Copy the generated static files into your application's frontend directory;
+the LAMP image does not need to change.
+
 ## Further documentation
 
 - [Adding and configuring projects](docs/PROJECTS.md#adding-and-deploying-projects)
 - [Database initialization and management](docs/DATABASE.md#database-initialization-and-management)
 - [Logs, verification and troubleshooting](docs/TROUBLESHOOTING.md#logs-verification-and-troubleshooting)
 - [Removing containers and images](docs/CLEANUP.md#removing-containers-and-images)
+- [Building and publishing React, Vue and Angular frontends](docs/FRONTEND.md)
 
 ## License and attribution
 
