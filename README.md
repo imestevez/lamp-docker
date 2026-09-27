@@ -210,7 +210,6 @@ Keep `.env` next to `compose.yaml`:
 
 ```text
 lamp-docker/
-├── .env
 ├── .env.example
 ├── compose.yaml
 ├── Dockerfile
@@ -221,6 +220,11 @@ lamp-docker/
 
 Run `docker compose` from this directory so that Compose finds `compose.yaml`
 and loads the expected `.env` file.
+Note that the`.env` file is not included, you should create it from scratch of from  `.env.example`
+
+```bash
+cp .env.example .env
+```
 
 Whenever `.env` changes, check the resolved configuration before restarting:
 

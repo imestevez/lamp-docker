@@ -50,7 +50,7 @@ lamp-docker/
 └── www/
 ```
 
-Linux:
+**Linux:**
 
 ```bash
 cd /path/to/lamp-docker
@@ -58,7 +58,7 @@ ls -la .env compose.yaml
 docker compose config
 ```
 
-Windows PowerShell:
+**Windows PowerShell:**
 
 ```powershell
 Set-Location C:\path\to\lamp-docker
@@ -76,13 +76,13 @@ Do not reset a database until `config` shows the expected values.
 
 To inspect the database initialization mount:
 
-Linux:
+**Linux:**
 
 ```bash
 docker compose config | grep -B3 -A3 docker-entrypoint-initdb.d
 ```
 
-Windows PowerShell:
+**Windows PowerShell:**
 
 ```powershell
 docker compose config |
@@ -331,13 +331,13 @@ docker compose exec lamp apache2ctl -S
 
 Check important modules.
 
-Linux:
+**Linux:**
 
 ```bash
 docker compose exec lamp apache2ctl -M | grep -E 'rewrite|headers'
 ```
 
-Windows PowerShell:
+**Windows PowerShell:**
 
 ```powershell
 docker compose exec lamp apache2ctl -M |
@@ -360,13 +360,13 @@ docker compose exec lamp php -v
 
 Check the required modules.
 
-Linux:
+**Linux:**
 
 ```bash
 docker compose exec lamp php -m | grep -E 'PDO|pdo_mysql|mysqli|mbstring'
 ```
 
-Windows PowerShell:
+**Windows PowerShell:**
 
 ```powershell
 docker compose exec lamp php -m |
@@ -404,14 +404,14 @@ mysqld is alive
 
 ### HTTP diagnostics
 
-Linux:
+**Linux:**
 
 ```bash
 curl -v http://localhost/
 curl -v http://localhost/dbtest.php
 ```
 
-Windows PowerShell:
+**Windows PowerShell:**
 
 ```powershell
 curl.exe -v http://localhost/

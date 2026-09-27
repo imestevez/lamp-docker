@@ -149,13 +149,13 @@ db/myproject1/
 
 Then import it.
 
-Linux:
+**Linux:**
 
 ```bash
 docker compose exec -T lamp mysql -uroot < db/myproject1/01-init.sql
 ```
 
-Windows PowerShell:
+**Windows PowerShell:**
 
 ```powershell
 Get-Content .\db\myproject1\01-init.sql -Raw |
